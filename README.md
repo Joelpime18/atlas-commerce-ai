@@ -16,6 +16,7 @@ Build the backend base that can receive a WhatsApp-style webhook, identify the c
 - `/health` endpoint.
 - `POST /webhook` endpoint.
 - Initial project structure for assistant, customers, orders, database, services, config, and tests.
+- First-phase Rosa Pistacho conversation logic.
 - PostgreSQL service definition with Docker Compose.
 
 ## Not included yet

@@ -16,12 +16,15 @@ def receive_whatsapp_message(
     payload: WebhookMessageRequest,
 ) -> WebhookMessageResponse:
     customer = CustomerService.identify_customer(phone_number=payload.from_phone)
-    reply = AssistantService.generate_reply(
+    assistant_reply = AssistantService.generate_reply(
         customer_name=customer.name,
         message=payload.message,
     )
 
     return WebhookMessageResponse(
         customer_id=customer.id,
-        reply=reply,
+        reply=assistant_reply.message,
+        intent=assistant_reply.intent,
+        stage=assistant_reply.stage,
+        suggested_actions=assistant_reply.suggested_actions,
     )

@@ -14,8 +14,22 @@ Customer -> WhatsApp -> Webhook -> Atlas -> Assistant -> Response -> Customer
 - `GET /health` returns service status.
 - `POST /webhook` receives a simple WhatsApp-style message.
 - Atlas identifies the customer by phone number.
-- Atlas returns a basic assistant reply.
+- Atlas classifies the first customer intent.
+- Atlas returns a first-phase commercial reply for Rosa Pistacho.
 - Automated tests verify the first flow.
+
+## First conversation phase
+
+This version handles the first commercial conversation without external AI:
+
+- Greeting.
+- Catalog and price questions.
+- Initial order intent.
+- Delivery or pickup questions.
+- Unknown message guidance.
+
+The assistant must ask for the next useful piece of information instead of trying
+to close the whole sale at once.
 
 ## Development discipline
 
