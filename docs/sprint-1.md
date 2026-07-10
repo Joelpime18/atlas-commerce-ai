@@ -22,14 +22,24 @@ Customer -> WhatsApp -> Webhook -> Atlas -> Assistant -> Response -> Customer
 
 This version handles the first commercial conversation without external AI:
 
-- Greeting.
+- Greeting with a simple menu.
+- Quote request.
 - Catalog and price questions.
 - Initial order intent.
 - Delivery or pickup questions.
+- Basic FAQ routing.
 - Unknown message guidance.
 
 The assistant must ask for the next useful piece of information instead of trying
 to close the whole sale at once.
+
+The first menu is:
+
+1. Cotizar una torta
+2. Realizar un pedido
+3. Consultar un pedido
+4. Conocer horarios
+5. Hablar con un asesor
 
 ## Development discipline
 

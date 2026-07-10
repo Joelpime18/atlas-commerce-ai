@@ -26,8 +26,8 @@ No feature enters the product unless it meets three conditions:
 
 ## v0.1.0 scope
 
-The first version focuses on the backend foundation and the first customer
-conversation phase.
+The first version focuses on the backend foundation and a reliable order capture
+flow. Atlas v0.1.0 is not a visual AI assistant and not a pricing engine.
 
 Included:
 
@@ -37,6 +37,7 @@ Included:
 - Deterministic first-phase assistant logic.
 - Basic Rosa Pistacho catalog.
 - Intent and conversation stage classification.
+- Main menu for the first WhatsApp interaction.
 - Automated tests.
 
 Not included yet:
@@ -49,15 +50,36 @@ Not included yet:
 - Real Meta Cloud API integration.
 - Real OpenAI API integration.
 - Persistent conversation history.
+- Image analysis.
+- Automatic design recognition.
+- Automatic final pricing.
+
+## Architectural decision 001
+
+Keep the MVP extremely simple. Atlas v0.1.0 is a reliable order capture system
+for Rosa Pistacho.
+
+The owner still decides:
+
+- Final price.
+- Design approval.
+- Availability.
+- Payment validation.
+- Order confirmation.
+
+Atlas should respond immediately, organize the information and guide the client
+to the next useful question.
 
 ## First conversation phase
 
 Atlas can currently handle:
 
-- Greeting.
+- Greeting with menu options.
 - Catalog and price questions.
+- Quote requests.
 - Initial order intent.
 - Delivery or pickup questions.
+- Basic FAQ routing.
 - Unknown messages that need guidance or human review.
 
 The goal is not to close a full sale yet. The goal is to ask for the next useful

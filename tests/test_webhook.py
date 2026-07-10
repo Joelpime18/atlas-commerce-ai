@@ -30,6 +30,39 @@ def test_webhook_returns_customer_reply() -> None:
     assert "fecha de entrega" in body["reply"]
 
 
+def test_webhook_returns_main_menu_for_greeting() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573001112233",
+            "message": "Hola",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "greeting"
+    assert body["stage"] == "main_menu"
+    assert "1. Cotizar una torta" in body["reply"]
+    assert "5. Hablar con un asesor" in body["reply"]
+
+
+def test_webhook_starts_quote_flow_from_menu_option() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573001112233",
+            "message": "1",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "quote"
+    assert body["stage"] == "quote_details"
+    assert "cuantas personas" in body["reply"]
+
+
 def test_webhook_returns_catalog_for_price_question() -> None:
     response = client.post(
         "/webhook",
@@ -58,4 +91,20 @@ def test_webhook_guides_unknown_message() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["intent"] == "unknown"
-    assert "ver el catalogo" in body["reply"]
+    assert "1 cotizar una torta" in body["reply"]
+
+
+def test_webhook_answers_hours_question() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573001112233",
+            "message": "4",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "faq"
+    assert body["stage"] == "faq_response"
+    assert "horario" in body["reply"]
