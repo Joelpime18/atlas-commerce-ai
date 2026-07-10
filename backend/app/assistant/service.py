@@ -6,6 +6,9 @@ from app.assistant.conversation import (
 )
 
 
+ROSA_PISTACHO_ADDRESS = "direccion pendiente por confirmar"
+
+
 class AssistantService:
     @staticmethod
     def generate_reply(customer_name: str, message: str) -> AssistantReply:
@@ -17,20 +20,34 @@ class AssistantService:
         if AssistantService._selects_quote(normalized_message):
             return AssistantReply(
                 message=(
-                    "Perfecto. Para ayudarte con la cotizacion necesito empezar "
-                    "con un dato: para cuantas personas es la torta?"
+                    "Perfecto, con gusto te ayudamos a cotizar tu torta. "
+                    "Para empezar, cuentanos:\n\n"
+                    "1. ¿Para cuantas personas es la torta?\n"
+                    "2. ¿Que color o colores te gustaria que tuviera?\n"
+                    "3. ¿Tienes una imagen de referencia? Si la tienes, por favor "
+                    "enviala en este chat.\n\n"
+                    "Ten presente que en Rosa Pistacho no trabajamos con imagenes "
+                    "obscenas o contenido inapropiado."
                 ),
                 intent=ConversationIntent.QUOTE,
                 stage=ConversationStage.QUOTE_DETAILS,
-                suggested_actions=["Pedir numero de personas"],
+                suggested_actions=[
+                    "Pedir numero de personas",
+                    "Pedir colores",
+                    "Pedir imagen de referencia",
+                ],
             )
 
         if AssistantService._selects_order(normalized_message):
             return AssistantReply(
                 message=(
-                    "Listo. Para iniciar tu pedido necesito: nombre, fecha de "
-                    "entrega, tipo de producto, numero de personas y si deseas "
-                    "recogerlo o recibirlo a domicilio."
+                    "Listo. Para realizar tu pedido necesitamos estos datos:\n\n"
+                    "1. Nombre completo\n"
+                    "2. Fecha de entrega\n"
+                    "3. Tipo de producto\n"
+                    "4. Numero de personas\n"
+                    "5. Si deseas recogerlo o recibirlo a domicilio\n"
+                    "6. Imagen de referencia de la torta"
                 ),
                 intent=ConversationIntent.ORDER,
                 stage=ConversationStage.ORDER_DETAILS,
@@ -39,18 +56,20 @@ class AssistantService:
                     "Pedir fecha de entrega",
                     "Pedir tipo de producto",
                     "Pedir numero de personas",
+                    "Pedir metodo de entrega",
+                    "Pedir imagen de referencia",
                 ],
             )
 
         if AssistantService._selects_status(normalized_message):
             return AssistantReply(
                 message=(
-                    "Claro. Para consultar un pedido necesito el nombre con el "
-                    "que fue registrado o el numero de telefono usado en WhatsApp."
+                    "Claro. Para consultar tu pedido, por favor enviame el numero "
+                    "de pedido."
                 ),
                 intent=ConversationIntent.FAQ,
                 stage=ConversationStage.FAQ_RESPONSE,
-                suggested_actions=["Pedir nombre o telefono"],
+                suggested_actions=["Pedir numero de pedido"],
             )
 
         if AssistantService._asks_for_hours(normalized_message):
@@ -62,18 +81,7 @@ class AssistantService:
                 ),
                 intent=ConversationIntent.FAQ,
                 stage=ConversationStage.FAQ_RESPONSE,
-                suggested_actions=["Iniciar pedido", "Hablar con asesor"],
-            )
-
-        if AssistantService._asks_for_human(normalized_message):
-            return AssistantReply(
-                message=(
-                    "Claro. Voy a dejar tu conversacion lista para que una asesora "
-                    "de Rosa Pistacho te contacte y continue la atencion."
-                ),
-                intent=ConversationIntent.HUMAN_SUPPORT,
-                stage=ConversationStage.HUMAN_REVIEW,
-                suggested_actions=["Escalar a humano"],
+                suggested_actions=["Iniciar pedido"],
             )
 
         if AssistantService._asks_for_catalog(normalized_message):
@@ -88,21 +96,38 @@ class AssistantService:
                 suggested_actions=["Elegir producto", "Indicar fecha"],
             )
 
+        if AssistantService._mentions_pickup(normalized_message):
+            return AssistantReply(
+                message=(
+                    "Perfecto, si deseas recoger tu pedido, puedes hacerlo en la "
+                    f"direccion de Rosa Pistacho: {ROSA_PISTACHO_ADDRESS}. "
+                    "Cuando tengamos la direccion oficial la dejaremos registrada "
+                    "aqui."
+                ),
+                intent=ConversationIntent.DELIVERY,
+                stage=ConversationStage.DELIVERY_DETAILS,
+                suggested_actions=["Confirmar horario de recogida"],
+            )
+
         product = find_product_in_message(normalized_message)
         if AssistantService._wants_to_order(normalized_message) or product:
             product_name = product.name if product else "el producto que quieres"
             return AssistantReply(
                 message=(
                     f"Perfecto. Puedo ayudarte a iniciar el pedido de {product_name}. "
-                    "Para continuar necesito tres datos: fecha de entrega, cantidad "
-                    "y si prefieres recogerlo o recibirlo a domicilio."
+                    "Para continuar necesito: nombre, fecha de entrega, tipo de "
+                    "producto, numero de personas, metodo de entrega e imagen de "
+                    "referencia de la torta."
                 ),
                 intent=ConversationIntent.ORDER,
                 stage=ConversationStage.ORDER_DETAILS,
                 suggested_actions=[
+                    "Pedir nombre",
                     "Pedir fecha de entrega",
-                    "Pedir cantidad",
+                    "Pedir tipo de producto",
+                    "Pedir numero de personas",
                     "Pedir metodo de entrega",
+                    "Pedir imagen de referencia",
                 ],
             )
 
@@ -124,8 +149,7 @@ class AssistantService:
             message=(
                 "Gracias por escribir a Rosa Pistacho. Para ayudarte mejor, "
                 "responde con una opcion: 1 cotizar una torta, 2 realizar un "
-                "pedido, 3 consultar un pedido, 4 conocer horarios o 5 hablar "
-                "con un asesor."
+                "pedido, 3 consultar un pedido o 4 conocer horarios."
             ),
             intent=ConversationIntent.UNKNOWN,
             stage=ConversationStage.MAIN_MENU,
@@ -134,7 +158,6 @@ class AssistantService:
                 "Realizar pedido",
                 "Consultar pedido",
                 "Conocer horarios",
-                "Hablar con asesor",
             ],
         )
 
@@ -142,14 +165,14 @@ class AssistantService:
     def _main_menu_reply(customer_name: str) -> AssistantReply:
         return AssistantReply(
             message=(
-                f"Hola {customer_name}, bienvenido(a) a Rosa Pistacho. "
-                "Con gusto te ayudamos.\n\n"
+                "¡Hola! 🌸✨ Qué alegría tenerte aquí. Bienvenido(a) a "
+                "Rosa Pistacho. Estamos felices de acompañarte y ayudarte a "
+                "encontrar justo lo que buscas. ¿En qué podemos ayudarte hoy?\n\n"
                 "Deseas:\n"
                 "1. Cotizar una torta\n"
                 "2. Realizar un pedido\n"
                 "3. Consultar un pedido\n"
-                "4. Conocer horarios\n"
-                "5. Hablar con un asesor"
+                "4. Conocer horarios"
             ),
             intent=ConversationIntent.GREETING,
             stage=ConversationStage.MAIN_MENU,
@@ -158,7 +181,6 @@ class AssistantService:
                 "Realizar pedido",
                 "Consultar pedido",
                 "Conocer horarios",
-                "Hablar con asesor",
             ],
         )
 
@@ -188,11 +210,6 @@ class AssistantService:
         return message in keywords or any(keyword in message for keyword in keywords)
 
     @staticmethod
-    def _asks_for_human(message: str) -> bool:
-        keywords = {"5", "asesor", "asesora", "humano", "persona"}
-        return message in keywords or any(keyword in message for keyword in keywords)
-
-    @staticmethod
     def _asks_for_catalog(message: str) -> bool:
         keywords = {"catalogo", "menu", "productos", "precio", "precios", "venden"}
         return any(keyword in message for keyword in keywords)
@@ -204,5 +221,10 @@ class AssistantService:
 
     @staticmethod
     def _mentions_delivery(message: str) -> bool:
-        keywords = {"domicilio", "entrega", "recoger", "direccion", "envio"}
+        keywords = {"domicilio", "entrega", "direccion", "envio"}
+        return any(keyword in message for keyword in keywords)
+
+    @staticmethod
+    def _mentions_pickup(message: str) -> bool:
+        keywords = {"recoger", "recojo", "recogida", "paso por", "pasar por"}
         return any(keyword in message for keyword in keywords)

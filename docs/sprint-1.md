@@ -39,7 +39,17 @@ The first menu is:
 2. Realizar un pedido
 3. Consultar un pedido
 4. Conocer horarios
-5. Hablar con un asesor
+
+Option details:
+
+- Cotizar una torta: asks for number of people, cake color or colors, and
+  reference image if available. It also clarifies that Rosa Pistacho does not
+  work with obscene or inappropriate images.
+- Realizar un pedido: asks for full name, delivery date, product type, number
+  of people, pickup or delivery method, and cake reference image.
+- Consultar un pedido: asks for the order number.
+- Conocer horarios: answers the schedule question while official hours are
+  confirmed.
 
 ## Development discipline
 
