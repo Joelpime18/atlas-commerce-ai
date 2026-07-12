@@ -192,6 +192,9 @@ def test_frequent_cafe_customer_gets_fixed_price_quote() -> None:
     assert "Brownie" in body["reply"]
     assert "Galleta NY Oreo" in body["reply"]
     assert "$306.000 COP" in body["reply"]
+    assert "credito" in body["reply"]
+    assert "soporte de pago" not in body["reply"]
+    assert "duena" not in body["reply"]
 
 
 def test_frequent_cafe_customer_gets_custom_greeting() -> None:

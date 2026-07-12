@@ -23,3 +23,4 @@ class Customer(BaseModel):
     customer_level: CustomerLevel = CustomerLevel.NEW
     alias: str | None = None
     average_orders_per_week: int | None = None
+    has_credit: bool = False

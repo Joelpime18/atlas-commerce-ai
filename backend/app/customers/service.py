@@ -16,6 +16,7 @@ class CustomerService:
                 customer_level=CustomerLevel.FREQUENT,
                 alias="Latidos",
                 average_orders_per_week=3,
+                has_credit=True,
             )
 
         return Customer(

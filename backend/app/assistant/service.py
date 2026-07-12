@@ -349,18 +349,33 @@ class AssistantService:
             for line in quote.lines
         ]
         summary = "\n".join(lines)
+        payment_message = (
+            "Este cliente cuenta con credito en Rosa Pistacho. "
+            "Registraremos el pedido para preparacion segun las condiciones "
+            "acordadas con el negocio."
+            if customer.has_credit
+            else (
+                "Una vez recibamos el soporte de pago, Rosa Pistacho validara "
+                "el ingreso. Cuando el pago quede confirmado, iniciaremos la "
+                "preparacion."
+            )
+        )
+        suggested_actions = (
+            ["Confirmar pedido con credito", "Registrar pedido"]
+            if customer.has_credit
+            else ["Confirmar pedido", "Solicitar soporte de pago"]
+        )
 
         return AssistantReply(
             message=(
                 f"Perfecto, {customer.alias or customer.name}. Este es el resumen "
                 f"de tu pedido:\n\n{summary}\n\n"
                 f"Total: {format_cop(quote.total_cop)}\n\n"
-                "Una vez recibamos el soporte de pago, la duena validara el ingreso. "
-                "Cuando el pago quede confirmado, iniciaremos la preparacion."
+                f"{payment_message}"
             ),
             intent=ConversationIntent.ORDER,
             stage=ConversationStage.ORDER_DETAILS,
-            suggested_actions=["Confirmar pedido", "Solicitar soporte de pago"],
+            suggested_actions=suggested_actions,
         )
 
     @staticmethod

@@ -34,6 +34,9 @@ information and never invent a fixed price.
 Frequent cafe customers can order fixed-price products from the catalog. Atlas
 can calculate totals for those products.
 
+Latido Coffee has credit with Rosa Pistacho. For this customer, Atlas must not
+ask for payment proof before preparation in the fixed-price order response.
+
 ## RB-003 - Delivery Policy
 
 Rosa Pistacho does not offer delivery service.

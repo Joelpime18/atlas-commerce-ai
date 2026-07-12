@@ -190,3 +190,6 @@ Se agrego informacion del negocio desde otro chat:
 - Se definio el catalogo base de productos de precio fijo.
 - Se agrego la idea de linea de tiempo del pedido para registrar cada evento
   importante.
+- Latido Coffee tiene credito con Rosa Pistacho. Para este cliente frecuente,
+  Atlas no debe pedir soporte de pago antes de preparar en la respuesta del
+  pedido de precio fijo.
