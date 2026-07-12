@@ -13,6 +13,14 @@ def test_health_check_returns_ok() -> None:
     assert response.json()["status"] == "ok"
 
 
+def test_demo_page_loads() -> None:
+    response = client.get("/demo")
+
+    assert response.status_code == 200
+    assert "Prueba de conversación para Rosa Pistacho" in response.text
+    assert "Enviar a Atlas" in response.text
+
+
 def test_webhook_returns_customer_reply() -> None:
     response = client.post(
         "/webhook",
