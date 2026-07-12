@@ -141,3 +141,22 @@ Primer objetivo de esa fase:
 - Guardar el estado del cliente.
 - Registrar un pedido preliminar con los datos disponibles.
 - Mantener la conversacion ordenada hasta que una asesora humana revise el caso.
+
+## Actualizacion - 2026-07-12
+
+Se agrego informacion del negocio desde otro chat:
+
+- La duena confirma los pagos manualmente.
+- Atlas nunca confirma pagos por su cuenta.
+- El pago tiene estado separado del pedido.
+- Latido Coffee es un cliente tipo Cafe, frecuente, con aproximadamente 3
+  pedidos por semana.
+- Rosa Pistacho no trabaja los domingos.
+- Rosa Pistacho no realiza domicilios.
+- Los pedidos se recogen en Cra 39 # 15 - 56, Barrio Villa Aurora II, Acacias,
+  Meta.
+- Los clientes nuevos normalmente solicitan tortas personalizadas.
+- Los clientes Cafe frecuentes compran productos de precio fijo.
+- Se definio el catalogo base de productos de precio fijo.
+- Se agrego la idea de linea de tiempo del pedido para registrar cada evento
+  importante.

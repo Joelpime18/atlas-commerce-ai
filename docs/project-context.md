@@ -38,6 +38,9 @@ Included:
 - Basic Rosa Pistacho catalog.
 - Intent and conversation stage classification.
 - Main menu for the first WhatsApp interaction.
+- Real fixed-price catalog for Rosa Pistacho.
+- Recognition of Latido Coffee as a frequent cafe customer.
+- Business rules for payments, pickup and operating hours.
 - Automated tests.
 
 Not included yet:
@@ -81,6 +84,7 @@ Atlas can currently handle:
   delivery method and cake reference image.
 - Delivery or pickup questions. Pickup replies include the Rosa Pistacho address
   placeholder until the official address is confirmed.
+- Frequent cafe customer flow with automatic fixed-price quote.
 - Basic FAQ routing.
 - Unknown messages that need guidance or human review.
 
