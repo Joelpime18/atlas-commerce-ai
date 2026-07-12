@@ -28,6 +28,13 @@ def test_demo_page_loads() -> None:
     assert "Enviar a Atlas" in response.text
 
 
+def test_catalog_pdf_is_available() -> None:
+    response = client.get("/static/catalogo-rosa-pistacho.pdf")
+
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("application/pdf")
+
+
 def test_webhook_returns_customer_reply() -> None:
     response = client.post(
         "/webhook",
@@ -123,8 +130,8 @@ def test_webhook_returns_catalog_for_price_question() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["intent"] == "catalog"
-    assert "Torta de Chocolate" in body["reply"]
-    assert "Brownie" in body["reply"]
+    assert "catalogo-rosa-pistacho.pdf" in body["reply"]
+    assert "Las tortas personalizadas se cotizan" in body["reply"]
 
 
 def test_webhook_guides_unknown_message() -> None:

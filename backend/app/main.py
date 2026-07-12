@@ -1,5 +1,6 @@
 from fastapi import FastAPI
 from fastapi.responses import HTMLResponse
+from fastapi.staticfiles import StaticFiles
 
 from app.api.webhook import router as webhook_router
 from app.config.settings import settings
@@ -11,6 +12,7 @@ app = FastAPI(
 )
 
 app.include_router(webhook_router)
+app.mount("/static", StaticFiles(directory="backend/app/static"), name="static")
 
 
 @app.get("/health")

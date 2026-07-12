@@ -1,6 +1,5 @@
 from app.assistant.catalog import (
     find_product_in_message,
-    format_catalog,
     format_cop,
     quote_fixed_products_from_message,
 )
@@ -405,13 +404,13 @@ class AssistantService:
     def _catalog_reply() -> AssistantReply:
         return AssistantReply(
             message=(
-                "Claro. Este es el catalogo base de Rosa Pistacho:\n"
-                f"{format_catalog()}\n\n"
+                "Claro. Puedes consultar el catalogo de Rosa Pistacho en este PDF:\n\n"
+                "http://127.0.0.1:8000/static/catalogo-rosa-pistacho.pdf\n\n"
                 "Las tortas personalizadas se cotizan segun el diseno."
             ),
             intent=ConversationIntent.CATALOG,
             stage=ConversationStage.PRODUCT_DISCOVERY,
-            suggested_actions=["Elegir producto", "Indicar fecha"],
+            suggested_actions=["Enviar catalogo PDF", "Indicar fecha"],
         )
 
     @staticmethod

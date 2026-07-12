@@ -39,6 +39,7 @@ Included:
 - Intent and conversation stage classification.
 - Main menu for the first WhatsApp interaction.
 - Real fixed-price catalog for Rosa Pistacho.
+- PDF catalog delivery through the browser demo and static backend file.
 - Recognition of Latido Coffee as a frequent cafe customer.
 - Business rules for payments, pickup and operating hours.
 - Temporary conversation memory for local browser testing.
@@ -79,7 +80,7 @@ to the next useful question.
 Atlas can currently handle:
 
 - Greeting with menu options.
-- Catalog and price questions.
+- Catalog questions with a PDF link instead of a long chat message.
 - Quote requests with number of people, colors and reference image guidance.
 - Initial order intent with name, delivery date, product type, number of people,
   delivery method and cake reference image.
