@@ -163,17 +163,12 @@ class AssistantService:
         customer: Customer,
         normalized_message: str,
     ) -> AssistantReply | None:
-        if AssistantService._is_greeting(normalized_message):
-            alias = customer.alias or customer.name
-            return AssistantReply(
-                message=(
-                    f"Buenos dias, {alias}. Que gusto atenderlos nuevamente. "
-                    "¿Que productos necesitan para esta semana?"
-                ),
-                intent=ConversationIntent.GREETING,
-                stage=ConversationStage.PRODUCT_DISCOVERY,
-                suggested_actions=["Recibir pedido de precio fijo"],
-            )
+        if (
+            AssistantService._selects_quote(normalized_message)
+            or AssistantService._selects_order(normalized_message)
+            or AssistantService._is_greeting(normalized_message)
+        ):
+            return AssistantService._frequent_customer_order_prompt(customer)
 
         quote = quote_fixed_products_from_message(normalized_message)
         if not quote:
@@ -196,6 +191,21 @@ class AssistantService:
             intent=ConversationIntent.ORDER,
             stage=ConversationStage.ORDER_DETAILS,
             suggested_actions=["Confirmar pedido", "Solicitar soporte de pago"],
+        )
+
+    @staticmethod
+    def _frequent_customer_order_prompt(customer: Customer) -> AssistantReply:
+        alias = customer.alias or customer.name
+        return AssistantReply(
+            message=(
+                f"Buenos dias, {alias}. Que gusto atenderlos nuevamente. "
+                "Por favor envianos el pedido con los productos y cantidades "
+                "que necesitan. Por ejemplo: 2 tortas de chocolate, 18 brownies "
+                "y 12 galletas NY Oreo."
+            ),
+            intent=ConversationIntent.GREETING,
+            stage=ConversationStage.PRODUCT_DISCOVERY,
+            suggested_actions=["Recibir pedido de precio fijo"],
         )
 
     @staticmethod
@@ -228,23 +238,22 @@ class AssistantService:
 
     @staticmethod
     def _selects_quote(message: str) -> bool:
-        keywords = {"1", "cotizar", "cotizacion"}
-        return message in keywords or "cotizar" in message
+        return message == "1" or "cotizar" in message or "cotizacion" in message
 
     @staticmethod
     def _selects_order(message: str) -> bool:
-        keywords = {"2", "realizar pedido", "hacer pedido"}
-        return message in keywords or any(keyword in message for keyword in keywords)
+        keywords = {"realizar pedido", "hacer pedido"}
+        return message == "2" or any(keyword in message for keyword in keywords)
 
     @staticmethod
     def _selects_status(message: str) -> bool:
-        keywords = {"3", "consultar pedido", "estado pedido", "estado del pedido"}
-        return message in keywords or any(keyword in message for keyword in keywords)
+        keywords = {"consultar pedido", "estado pedido", "estado del pedido"}
+        return message == "3" or any(keyword in message for keyword in keywords)
 
     @staticmethod
     def _asks_for_hours(message: str) -> bool:
-        keywords = {"4", "horario", "horarios", "hora", "atienden", "domingo"}
-        return message in keywords or any(keyword in message for keyword in keywords)
+        keywords = {"horario", "horarios", "hora", "atienden", "domingo"}
+        return message == "4" or any(keyword in message for keyword in keywords)
 
     @staticmethod
     def _asks_for_catalog(message: str) -> bool:

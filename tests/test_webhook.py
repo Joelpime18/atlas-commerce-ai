@@ -204,3 +204,21 @@ def test_frequent_cafe_customer_gets_custom_greeting() -> None:
     body = response.json()
     assert body["customer_id"] == "CL0001"
     assert "Latidos" in body["reply"]
+
+
+def test_frequent_cafe_customer_does_not_get_custom_cake_quote_flow() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573009990001",
+            "message": "1",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["customer_id"] == "CL0001"
+    assert "envianos el pedido" in body["reply"]
+    assert "productos y cantidades" in body["reply"]
+    assert "color o colores" not in body["reply"]
+    assert "imagenes obscenas" not in body["reply"]
