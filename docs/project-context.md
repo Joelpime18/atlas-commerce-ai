@@ -41,6 +41,7 @@ Included:
 - Real fixed-price catalog for Rosa Pistacho.
 - Recognition of Latido Coffee as a frequent cafe customer.
 - Business rules for payments, pickup and operating hours.
+- Temporary conversation memory for local browser testing.
 - Automated tests.
 
 Not included yet:
@@ -94,7 +95,7 @@ piece of information so Rosa Pistacho can continue the conversation clearly.
 ## Next likely commits
 
 1. Persist customers and conversations in PostgreSQL.
-2. Add order draft model.
+2. Persist order drafts.
 3. Add WhatsApp webhook verification for Meta Cloud API.
 4. Add outbound WhatsApp message service.
 5. Replace deterministic replies with an OpenAI-assisted conversation service.

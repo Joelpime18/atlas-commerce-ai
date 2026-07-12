@@ -9,6 +9,7 @@ from app.assistant.conversation import (
     ConversationIntent,
     ConversationStage,
 )
+from app.assistant.memory import ConversationMemory, ConversationSession
 from app.config.business_rules import (
     DELIVERY_POLICY,
     ROSA_PISTACHO_ADDRESS,
@@ -30,36 +31,37 @@ class AssistantService:
             if cafe_reply:
                 return cafe_reply
 
+        session = ConversationMemory.get(customer.id)
+        session_reply = AssistantService._continue_session(customer, session, message)
+        if session_reply:
+            return session_reply
+
         if AssistantService._selects_quote(normalized_message):
+            ConversationMemory.start(
+                customer_id=customer.id,
+                flow="custom_quote",
+                step="people",
+            )
             return AssistantReply(
                 message=(
                     "Perfecto, con gusto te ayudamos a cotizar tu torta. "
-                    "Para empezar, cuentanos:\n\n"
-                    "1. ¿Para cuantas personas es la torta?\n"
-                    "2. ¿Que color o colores te gustaria que tuviera?\n"
-                    "3. ¿Tienes una imagen de referencia? Si la tienes, por favor "
-                    "enviala en este chat.\n\n"
-                    "Ten presente que en Rosa Pistacho no trabajamos con imagenes "
-                    "obscenas o contenido inapropiado."
+                    "Para empezar: ¿para cuantas personas es la torta?"
                 ),
                 intent=ConversationIntent.QUOTE,
                 stage=ConversationStage.QUOTE_DETAILS,
-                suggested_actions=[
-                    "Pedir numero de personas",
-                    "Pedir colores",
-                    "Pedir imagen de referencia",
-                ],
+                suggested_actions=["Pedir numero de personas"],
             )
 
         if AssistantService._selects_order(normalized_message):
+            ConversationMemory.start(
+                customer_id=customer.id,
+                flow="order",
+                step="name",
+            )
             return AssistantReply(
                 message=(
-                    "Listo. Para realizar tu pedido necesitamos estos datos:\n\n"
-                    "1. Nombre completo\n"
-                    "2. Fecha de entrega\n"
-                    "3. Tipo de producto\n"
-                    "4. Numero de personas\n"
-                    "5. Imagen de referencia de la torta\n\n"
+                    "Listo. Para realizar tu pedido, empecemos por el nombre. "
+                    "¿A nombre de quien registramos el pedido?\n\n"
                     "Importante: Rosa Pistacho no realiza domicilios. Los pedidos "
                     f"se recogen en: {ROSA_PISTACHO_ADDRESS}."
                 ),
@@ -67,10 +69,6 @@ class AssistantService:
                 stage=ConversationStage.ORDER_DETAILS,
                 suggested_actions=[
                     "Pedir nombre",
-                    "Pedir fecha de entrega",
-                    "Pedir tipo de producto",
-                    "Pedir numero de personas",
-                    "Pedir imagen de referencia",
                 ],
             )
 
@@ -140,6 +138,7 @@ class AssistantService:
             )
 
         if AssistantService._is_greeting(normalized_message):
+            ConversationMemory.clear(customer.id)
             return AssistantService._main_menu_reply(customer)
 
         return AssistantReply(
@@ -156,6 +155,177 @@ class AssistantService:
                 "Consultar pedido",
                 "Conocer horarios",
             ],
+        )
+
+    @staticmethod
+    def _continue_session(
+        customer: Customer,
+        session: ConversationSession,
+        message: str,
+    ) -> AssistantReply | None:
+        normalized_message = message.lower().strip()
+
+        if not session.flow or not session.step:
+            return None
+
+        if normalized_message in {"cancelar", "salir", "reiniciar"}:
+            ConversationMemory.clear(customer.id)
+            return AssistantReply(
+                message=(
+                    "Listo, reiniciamos la conversacion. Cuando quieras, escribe "
+                    "Hola para ver el menu principal."
+                ),
+                intent=ConversationIntent.UNKNOWN,
+                stage=ConversationStage.MAIN_MENU,
+                suggested_actions=["Volver al menu"],
+            )
+
+        if session.flow == "custom_quote":
+            return AssistantService._continue_custom_quote(customer, session, message)
+
+        if session.flow == "order":
+            return AssistantService._continue_order(customer, session, message)
+
+        return None
+
+    @staticmethod
+    def _continue_custom_quote(
+        customer: Customer,
+        session: ConversationSession,
+        message: str,
+    ) -> AssistantReply:
+        if session.step == "people":
+            session.data["people"] = message.strip()
+            session.step = "colors"
+            return AssistantReply(
+                message="Gracias. ¿Que color o colores te gustaria que tuviera?",
+                intent=ConversationIntent.QUOTE,
+                stage=ConversationStage.QUOTE_DETAILS,
+                suggested_actions=["Pedir colores"],
+            )
+
+        if session.step == "colors":
+            session.data["colors"] = message.strip()
+            session.step = "reference_image"
+            return AssistantReply(
+                message=(
+                    "Perfecto. ¿Tienes una imagen de referencia? Si la tienes, "
+                    "por favor enviala en este chat.\n\n"
+                    "Ten presente que en Rosa Pistacho no trabajamos con imagenes "
+                    "obscenas o contenido inapropiado."
+                ),
+                intent=ConversationIntent.QUOTE,
+                stage=ConversationStage.QUOTE_DETAILS,
+                suggested_actions=["Pedir imagen de referencia"],
+            )
+
+        if session.step == "reference_image":
+            session.data["reference_image"] = message.strip()
+            summary = AssistantService._format_custom_quote_summary(session)
+            ConversationMemory.clear(customer.id)
+            return AssistantReply(
+                message=(
+                    "Gracias. Ya tenemos la informacion inicial para cotizar tu "
+                    f"torta:\n\n{summary}\n\n"
+                    "Una asesora de Rosa Pistacho revisara los detalles y te "
+                    "compartira la cotizacion."
+                ),
+                intent=ConversationIntent.QUOTE,
+                stage=ConversationStage.HUMAN_REVIEW,
+                suggested_actions=["Enviar a revision humana"],
+            )
+
+        ConversationMemory.clear(customer.id)
+        return AssistantService._main_menu_reply(customer)
+
+    @staticmethod
+    def _continue_order(
+        customer: Customer,
+        session: ConversationSession,
+        message: str,
+    ) -> AssistantReply:
+        if session.step == "name":
+            session.data["name"] = message.strip()
+            session.step = "delivery_date"
+            return AssistantReply(
+                message="Gracias. ¿Para que fecha necesitas el pedido?",
+                intent=ConversationIntent.ORDER,
+                stage=ConversationStage.ORDER_DETAILS,
+                suggested_actions=["Pedir fecha de entrega"],
+            )
+
+        if session.step == "delivery_date":
+            session.data["delivery_date"] = message.strip()
+            session.step = "product_type"
+            return AssistantReply(
+                message="Perfecto. ¿Que tipo de producto necesitas?",
+                intent=ConversationIntent.ORDER,
+                stage=ConversationStage.ORDER_DETAILS,
+                suggested_actions=["Pedir tipo de producto"],
+            )
+
+        if session.step == "product_type":
+            session.data["product_type"] = message.strip()
+            session.step = "people"
+            return AssistantReply(
+                message="Entendido. ¿Para cuantas personas es?",
+                intent=ConversationIntent.ORDER,
+                stage=ConversationStage.ORDER_DETAILS,
+                suggested_actions=["Pedir numero de personas"],
+            )
+
+        if session.step == "people":
+            session.data["people"] = message.strip()
+            session.step = "reference_image"
+            return AssistantReply(
+                message=(
+                    "Gracias. Por favor envia la imagen de referencia de la torta "
+                    "o cuentanos si no tienes una."
+                ),
+                intent=ConversationIntent.ORDER,
+                stage=ConversationStage.ORDER_DETAILS,
+                suggested_actions=["Pedir imagen de referencia"],
+            )
+
+        if session.step == "reference_image":
+            session.data["reference_image"] = message.strip()
+            summary = AssistantService._format_order_summary(session)
+            ConversationMemory.clear(customer.id)
+            return AssistantReply(
+                message=(
+                    "Gracias. Ya tenemos la informacion inicial de tu pedido:\n\n"
+                    f"{summary}\n\n"
+                    f"Recuerda que los pedidos se recogen en: {ROSA_PISTACHO_ADDRESS}. "
+                    "Una asesora revisara la informacion y continuara el proceso."
+                ),
+                intent=ConversationIntent.ORDER,
+                stage=ConversationStage.HUMAN_REVIEW,
+                suggested_actions=["Enviar a revision humana"],
+            )
+
+        ConversationMemory.clear(customer.id)
+        return AssistantService._main_menu_reply(customer)
+
+    @staticmethod
+    def _format_custom_quote_summary(session: ConversationSession) -> str:
+        return "\n".join(
+            [
+                f"- Personas: {session.data.get('people', 'pendiente')}",
+                f"- Colores: {session.data.get('colors', 'pendiente')}",
+                f"- Imagen de referencia: {session.data.get('reference_image', 'pendiente')}",
+            ]
+        )
+
+    @staticmethod
+    def _format_order_summary(session: ConversationSession) -> str:
+        return "\n".join(
+            [
+                f"- Nombre: {session.data.get('name', 'pendiente')}",
+                f"- Fecha de entrega: {session.data.get('delivery_date', 'pendiente')}",
+                f"- Tipo de producto: {session.data.get('product_type', 'pendiente')}",
+                f"- Personas: {session.data.get('people', 'pendiente')}",
+                f"- Imagen de referencia: {session.data.get('reference_image', 'pendiente')}",
+            ]
         )
 
     @staticmethod

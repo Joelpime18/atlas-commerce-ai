@@ -1,9 +1,16 @@
 from fastapi.testclient import TestClient
+import pytest
 
+from app.assistant.memory import ConversationMemory
 from app.main import app
 
 
 client = TestClient(app)
+
+
+@pytest.fixture(autouse=True)
+def clear_conversation_memory() -> None:
+    ConversationMemory.clear_all()
 
 
 def test_health_check_returns_ok() -> None:
@@ -69,9 +76,6 @@ def test_webhook_starts_quote_flow_from_menu_option() -> None:
     assert body["intent"] == "quote"
     assert body["stage"] == "quote_details"
     assert "cuantas personas" in body["reply"]
-    assert "color o colores" in body["reply"]
-    assert "imagen de referencia" in body["reply"]
-    assert "obscenas" in body["reply"]
 
 
 def test_webhook_starts_order_flow_from_menu_option() -> None:
@@ -87,8 +91,7 @@ def test_webhook_starts_order_flow_from_menu_option() -> None:
     body = response.json()
     assert body["intent"] == "order"
     assert body["stage"] == "order_details"
-    assert "Nombre completo" in body["reply"]
-    assert "Imagen de referencia" in body["reply"]
+    assert "A nombre de quien" in body["reply"]
     assert "no realiza domicilios" in body["reply"]
 
 
@@ -222,3 +225,90 @@ def test_frequent_cafe_customer_does_not_get_custom_cake_quote_flow() -> None:
     assert "productos y cantidades" in body["reply"]
     assert "color o colores" not in body["reply"]
     assert "imagenes obscenas" not in body["reply"]
+
+
+def test_custom_quote_conversation_memory_flow() -> None:
+    phone = "573001114444"
+
+    first = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "1"},
+    )
+    assert first.status_code == 200
+    assert "cuantas personas" in first.json()["reply"]
+
+    second = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "20 personas"},
+    )
+    assert second.status_code == 200
+    assert "color o colores" in second.json()["reply"]
+
+    third = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "Rosada y dorada"},
+    )
+    assert third.status_code == 200
+    assert "imagen de referencia" in third.json()["reply"]
+    assert "obscenas" in third.json()["reply"]
+
+    fourth = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "Si, ya la envie"},
+    )
+    assert fourth.status_code == 200
+    body = fourth.json()
+    assert body["stage"] == "human_review"
+    assert "20 personas" in body["reply"]
+    assert "Rosada y dorada" in body["reply"]
+    assert "asesora" in body["reply"]
+
+
+def test_order_conversation_memory_flow() -> None:
+    phone = "573001115555"
+
+    first = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "2"},
+    )
+    assert first.status_code == 200
+    assert "A nombre de quien" in first.json()["reply"]
+
+    second = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "Maria Lopez"},
+    )
+    assert second.status_code == 200
+    assert "fecha necesitas" in second.json()["reply"]
+
+    third = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "15 de julio"},
+    )
+    assert third.status_code == 200
+    assert "tipo de producto" in third.json()["reply"]
+
+    fourth = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "Torta personalizada"},
+    )
+    assert fourth.status_code == 200
+    assert "cuantas personas" in fourth.json()["reply"]
+
+    fifth = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "30 personas"},
+    )
+    assert fifth.status_code == 200
+    assert "imagen de referencia" in fifth.json()["reply"]
+
+    sixth = client.post(
+        "/webhook",
+        json={"from_phone": phone, "message": "No tengo imagen"},
+    )
+    assert sixth.status_code == 200
+    body = sixth.json()
+    assert body["stage"] == "human_review"
+    assert "Maria Lopez" in body["reply"]
+    assert "15 de julio" in body["reply"]
+    assert "Torta personalizada" in body["reply"]

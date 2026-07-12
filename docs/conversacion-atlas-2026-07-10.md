@@ -142,6 +142,36 @@ Primer objetivo de esa fase:
 - Registrar un pedido preliminar con los datos disponibles.
 - Mantener la conversacion ordenada hasta que una asesora humana revise el caso.
 
+## Actualizacion - memoria temporal
+
+Atlas ya cuenta con memoria temporal para pruebas locales.
+
+Esto permite probar una conversacion completa mientras el servidor esta
+encendido:
+
+Cliente:
+
+```text
+1
+```
+
+Atlas:
+
+```text
+¿Para cuantas personas es la torta?
+```
+
+Cliente:
+
+```text
+20 personas
+```
+
+Atlas recuerda que esta en una cotizacion y pregunta por los colores.
+
+Esta memoria es solo para pruebas. Si el servidor se apaga, la conversacion se
+reinicia. Mas adelante se reemplazara por memoria persistente en PostgreSQL.
+
 ## Actualizacion - 2026-07-12
 
 Se agrego informacion del negocio desde otro chat:
