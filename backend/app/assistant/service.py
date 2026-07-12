@@ -44,8 +44,8 @@ class AssistantService:
             )
             return AssistantReply(
                 message=(
-                    "Perfecto, con gusto te ayudamos a cotizar tu torta. "
-                    "Para empezar: ¿para cuantas personas es la torta?"
+                    "Perfecto, con gusto te ayudamos a cotizar tu torta "
+                    "personalizada. Para empezar: ¿para cuantas personas es la torta?"
                 ),
                 intent=ConversationIntent.QUOTE,
                 stage=ConversationStage.QUOTE_DETAILS,
@@ -67,10 +67,11 @@ class AssistantService:
                 ),
                 intent=ConversationIntent.ORDER,
                 stage=ConversationStage.ORDER_DETAILS,
-                suggested_actions=[
-                    "Pedir nombre",
-                ],
+                suggested_actions=["Pedir nombre"],
             )
+
+        if AssistantService._asks_for_catalog(normalized_message):
+            return AssistantService._catalog_reply()
 
         if AssistantService._selects_status(normalized_message):
             return AssistantReply(
@@ -91,17 +92,8 @@ class AssistantService:
                 suggested_actions=["Iniciar pedido"],
             )
 
-        if AssistantService._asks_for_catalog(normalized_message):
-            return AssistantReply(
-                message=(
-                    "Claro. Este es el catalogo base de productos con precio fijo:\n"
-                    f"{format_catalog()}\n\n"
-                    "Las tortas personalizadas se cotizan segun el diseno."
-                ),
-                intent=ConversationIntent.CATALOG,
-                stage=ConversationStage.PRODUCT_DISCOVERY,
-                suggested_actions=["Elegir producto", "Indicar fecha"],
-            )
+        if AssistantService._selects_cafe_application(normalized_message):
+            return AssistantService._cafe_application_reply()
 
         if AssistantService._mentions_delivery(normalized_message):
             return AssistantReply(
@@ -144,17 +136,13 @@ class AssistantService:
         return AssistantReply(
             message=(
                 "Gracias por escribir a Rosa Pistacho. Para ayudarte mejor, "
-                "responde con una opcion: 1 cotizar una torta, 2 realizar un "
-                "pedido, 3 consultar un pedido o 4 conocer horarios."
+                "responde con una opcion: 1 cotizar una torta personalizada, "
+                "2 realizar un pedido, 3 ver catalogo, 4 consultar un pedido, "
+                "5 conocer horarios o 6 informacion para cafes frecuentes."
             ),
             intent=ConversationIntent.UNKNOWN,
             stage=ConversationStage.MAIN_MENU,
-            suggested_actions=[
-                "Cotizar torta",
-                "Realizar pedido",
-                "Consultar pedido",
-                "Conocer horarios",
-            ],
+            suggested_actions=AssistantService._main_menu_actions(),
         )
 
     @staticmethod
@@ -226,7 +214,7 @@ class AssistantService:
             return AssistantReply(
                 message=(
                     "Gracias. Ya tenemos la informacion inicial para cotizar tu "
-                    f"torta:\n\n{summary}\n\n"
+                    f"torta personalizada:\n\n{summary}\n\n"
                     "Una asesora de Rosa Pistacho revisara los detalles y te "
                     "compartira la cotizacion."
                 ),
@@ -401,20 +389,55 @@ class AssistantService:
                 "Rosa Pistacho. Estamos felices de acompañarte y ayudarte a "
                 "encontrar justo lo que buscas. ¿En qué podemos ayudarte hoy?\n\n"
                 "Deseas:\n"
-                "1. Cotizar una torta\n"
+                "1. Cotizar una torta personalizada\n"
                 "2. Realizar un pedido\n"
-                "3. Consultar un pedido\n"
-                "4. Conocer horarios"
+                "3. Catalogo\n"
+                "4. Consultar un pedido\n"
+                "5. Conocer horarios\n"
+                "6. Quiero que mi cafe sea cliente frecuente"
             ),
             intent=ConversationIntent.GREETING,
             stage=ConversationStage.MAIN_MENU,
-            suggested_actions=[
-                "Cotizar torta",
-                "Realizar pedido",
-                "Consultar pedido",
-                "Conocer horarios",
-            ],
+            suggested_actions=AssistantService._main_menu_actions(),
         )
+
+    @staticmethod
+    def _catalog_reply() -> AssistantReply:
+        return AssistantReply(
+            message=(
+                "Claro. Este es el catalogo base de Rosa Pistacho:\n"
+                f"{format_catalog()}\n\n"
+                "Las tortas personalizadas se cotizan segun el diseno."
+            ),
+            intent=ConversationIntent.CATALOG,
+            stage=ConversationStage.PRODUCT_DISCOVERY,
+            suggested_actions=["Elegir producto", "Indicar fecha"],
+        )
+
+    @staticmethod
+    def _cafe_application_reply() -> AssistantReply:
+        return AssistantReply(
+            message=(
+                "¡Nos encanta que quieras que tu cafe trabaje con Rosa Pistacho! "
+                "Por favor dejanos el nombre del cafe, nombre de contacto y numero "
+                "de telefono. Rosa Pistacho revisara la informacion y se pondra "
+                "en contacto contigo."
+            ),
+            intent=ConversationIntent.CAFE_APPLICATION,
+            stage=ConversationStage.HUMAN_REVIEW,
+            suggested_actions=["Solicitar datos del cafe", "Enviar a Rosa Pistacho"],
+        )
+
+    @staticmethod
+    def _main_menu_actions() -> list[str]:
+        return [
+            "Cotizar torta personalizada",
+            "Realizar pedido",
+            "Ver catalogo",
+            "Consultar pedido",
+            "Conocer horarios",
+            "Cafe cliente frecuente",
+        ]
 
     @staticmethod
     def _is_greeting(message: str) -> bool:
@@ -431,19 +454,31 @@ class AssistantService:
         return message == "2" or any(keyword in message for keyword in keywords)
 
     @staticmethod
+    def _asks_for_catalog(message: str) -> bool:
+        keywords = {"catalogo", "catalogo", "menu", "productos", "precio", "precios", "venden"}
+        return message == "3" or any(keyword in message for keyword in keywords)
+
+    @staticmethod
     def _selects_status(message: str) -> bool:
         keywords = {"consultar pedido", "estado pedido", "estado del pedido"}
-        return message == "3" or any(keyword in message for keyword in keywords)
+        return message == "4" or any(keyword in message for keyword in keywords)
 
     @staticmethod
     def _asks_for_hours(message: str) -> bool:
         keywords = {"horario", "horarios", "hora", "atienden", "domingo"}
-        return message == "4" or any(keyword in message for keyword in keywords)
+        return message == "5" or any(keyword in message for keyword in keywords)
 
     @staticmethod
-    def _asks_for_catalog(message: str) -> bool:
-        keywords = {"catalogo", "menu", "productos", "precio", "precios", "venden"}
-        return any(keyword in message for keyword in keywords)
+    def _selects_cafe_application(message: str) -> bool:
+        keywords = {
+            "cliente frecuente",
+            "cafe frecuente",
+            "mi cafe",
+            "cafeteria",
+            "café",
+            "cafe",
+        }
+        return message == "6" or any(keyword in message for keyword in keywords)
 
     @staticmethod
     def _wants_to_order(message: str) -> bool:

@@ -60,10 +60,12 @@ Cuando el cliente escribe `Hola`, Atlas responde:
 ¡Hola! 🌸✨ Qué alegría tenerte aquí. Bienvenido(a) a Rosa Pistacho. Estamos felices de acompañarte y ayudarte a encontrar justo lo que buscas. ¿En qué podemos ayudarte hoy?
 
 Deseas:
-1. Cotizar una torta
+1. Cotizar una torta personalizada
 2. Realizar un pedido
-3. Consultar un pedido
-4. Conocer horarios
+3. Catalogo
+4. Consultar un pedido
+5. Conocer horarios
+6. Quiero que mi cafe sea cliente frecuente
 ```
 
 ## Opcion 1 - Cotizar una torta
@@ -95,7 +97,12 @@ Rosa Pistacho.
 
 La direccion real aun esta pendiente por confirmar.
 
-## Opcion 3 - Consultar un pedido
+## Opcion 3 - Catalogo
+
+Atlas debe enviar el catalogo base de Rosa Pistacho con productos de precio
+fijo.
+
+## Opcion 4 - Consultar un pedido
 
 Atlas debe solicitar:
 
@@ -104,11 +111,22 @@ Atlas debe solicitar:
 En esta version todavia no existe busqueda real en base de datos. Eso vendra en
 una siguiente fase.
 
-## Opcion 4 - Conocer horarios
+## Opcion 5 - Conocer horarios
 
 Atlas debe responder la consulta de horarios.
 
 Los horarios reales de Rosa Pistacho aun estan pendientes por confirmar.
+
+## Opcion 6 - Nuevo cafe frecuente
+
+Atlas debe solicitar los datos del cafe interesado:
+
+- Nombre del cafe.
+- Nombre de contacto.
+- Numero de telefono.
+
+Luego debe indicar que Rosa Pistacho revisara la informacion y se pondra en
+contacto.
 
 ## Pruebas actuales
 

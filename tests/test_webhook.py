@@ -58,8 +58,9 @@ def test_webhook_returns_main_menu_for_greeting() -> None:
     body = response.json()
     assert body["intent"] == "greeting"
     assert body["stage"] == "main_menu"
-    assert "1. Cotizar una torta" in body["reply"]
-    assert "4. Conocer horarios" in body["reply"]
+    assert "1. Cotizar una torta personalizada" in body["reply"]
+    assert "3. Catalogo" in body["reply"]
+    assert "6. Quiero que mi cafe sea cliente frecuente" in body["reply"]
 
 
 def test_webhook_starts_quote_flow_from_menu_option() -> None:
@@ -100,7 +101,7 @@ def test_webhook_asks_for_order_number() -> None:
         "/webhook",
         json={
             "from_phone": "573001112233",
-            "message": "3",
+            "message": "4",
         },
     )
 
@@ -115,7 +116,7 @@ def test_webhook_returns_catalog_for_price_question() -> None:
         "/webhook",
         json={
             "from_phone": "573001112233",
-            "message": "Me compartes el catalogo y precios?",
+            "message": "3",
         },
     )
 
@@ -138,8 +139,8 @@ def test_webhook_guides_unknown_message() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["intent"] == "unknown"
-    assert "1 cotizar una torta" in body["reply"]
-    assert "4 conocer horarios" in body["reply"]
+    assert "1 cotizar una torta personalizada" in body["reply"]
+    assert "6 informacion para cafes frecuentes" in body["reply"]
 
 
 def test_webhook_answers_hours_question() -> None:
@@ -147,7 +148,7 @@ def test_webhook_answers_hours_question() -> None:
         "/webhook",
         json={
             "from_phone": "573001112233",
-            "message": "4",
+            "message": "5",
         },
     )
 
@@ -228,6 +229,23 @@ def test_frequent_cafe_customer_does_not_get_custom_cake_quote_flow() -> None:
     assert "productos y cantidades" in body["reply"]
     assert "color o colores" not in body["reply"]
     assert "imagenes obscenas" not in body["reply"]
+
+
+def test_new_cafe_application_option_routes_to_human_review() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573001116666",
+            "message": "6",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "cafe_application"
+    assert body["stage"] == "human_review"
+    assert "nombre del cafe" in body["reply"]
+    assert "se pondra en contacto" in body["reply"]
 
 
 def test_custom_quote_conversation_memory_flow() -> None:

@@ -86,6 +86,7 @@ Atlas can currently handle:
 - Delivery or pickup questions. Pickup replies include the Rosa Pistacho address
   placeholder until the official address is confirmed.
 - Frequent cafe customer flow with automatic fixed-price quote.
+- New cafe lead flow so Rosa Pistacho can contact potential frequent customers.
 - Basic FAQ routing.
 - Unknown messages that need guidance or human review.
 

@@ -10,6 +10,7 @@ class ConversationIntent(StrEnum):
     ORDER = "order"
     DELIVERY = "delivery"
     FAQ = "faq"
+    CAFE_APPLICATION = "cafe_application"
     HUMAN_SUPPORT = "human_support"
     UNKNOWN = "unknown"
 

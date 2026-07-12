@@ -37,6 +37,9 @@ can calculate totals for those products.
 Latido Coffee has credit with Rosa Pistacho. For this customer, Atlas must not
 ask for payment proof before preparation in the fixed-price order response.
 
+New cafes interested in becoming frequent customers must leave their contact
+information. Rosa Pistacho reviews the information and contacts them directly.
+
 ## RB-003 - Delivery Policy
 
 Rosa Pistacho does not offer delivery service.
