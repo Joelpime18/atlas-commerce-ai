@@ -146,8 +146,26 @@ def test_webhook_guides_unknown_message() -> None:
     assert response.status_code == 200
     body = response.json()
     assert body["intent"] == "unknown"
-    assert "1 cotizar una torta personalizada" in body["reply"]
-    assert "6 informacion para cafes frecuentes" in body["reply"]
+    assert "responde con una opcion:" in body["reply"]
+    assert "1. Cotizar una torta personalizada" in body["reply"]
+    assert "2. Realizar un pedido" in body["reply"]
+    assert "6. Informacion para cafes frecuentes" in body["reply"]
+
+
+def test_new_customer_gets_warm_thanks_reply() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573001112233",
+            "message": "Gracias",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["intent"] == "faq"
+    assert "Gracias a ti" in body["reply"]
+    assert "elegir a Rosa Pistacho" in body["reply"]
 
 
 def test_webhook_answers_hours_question() -> None:
@@ -219,6 +237,8 @@ def test_frequent_cafe_customer_gets_custom_greeting() -> None:
     body = response.json()
     assert body["customer_id"] == "CL0001"
     assert "Latidos" in body["reply"]
+    assert "Buen dia" in body["reply"]
+    assert "Buenos dias" not in body["reply"]
 
 
 def test_frequent_cafe_customer_does_not_get_custom_cake_quote_flow() -> None:

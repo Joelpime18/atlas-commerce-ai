@@ -25,11 +25,14 @@ class AssistantService:
         if not normalized_message:
             return AssistantService._main_menu_reply(customer)
 
-        if AssistantService._is_thanks(normalized_message) and (
-            customer.customer_type == CustomerType.CAFE
-            or customer.customer_level in {CustomerLevel.FREQUENT, CustomerLevel.VIP}
-        ):
-            return AssistantService._frequent_customer_thanks_reply(customer)
+        if AssistantService._is_thanks(normalized_message):
+            if (
+                customer.customer_type == CustomerType.CAFE
+                or customer.customer_level in {CustomerLevel.FREQUENT, CustomerLevel.VIP}
+            ):
+                return AssistantService._frequent_customer_thanks_reply(customer)
+
+            return AssistantService._customer_thanks_reply()
 
         if customer.customer_type == CustomerType.CAFE:
             cafe_reply = AssistantService._generate_cafe_reply(customer, normalized_message)
@@ -141,9 +144,13 @@ class AssistantService:
         return AssistantReply(
             message=(
                 "Gracias por escribir a Rosa Pistacho. Para ayudarte mejor, "
-                "responde con una opcion: 1 cotizar una torta personalizada, "
-                "2 realizar un pedido, 3 ver catalogo, 4 consultar un pedido, "
-                "5 conocer horarios o 6 informacion para cafes frecuentes."
+                "responde con una opcion:\n\n"
+                "1. Cotizar una torta personalizada\n"
+                "2. Realizar un pedido\n"
+                "3. Ver catalogo\n"
+                "4. Consultar un pedido\n"
+                "5. Conocer horarios\n"
+                "6. Informacion para cafes frecuentes"
             ),
             intent=ConversationIntent.UNKNOWN,
             stage=ConversationStage.MAIN_MENU,
@@ -379,7 +386,7 @@ class AssistantService:
         alias = customer.alias or customer.name
         return AssistantReply(
             message=(
-                f"Buenos dias, {alias}. Que gusto atenderlos nuevamente. "
+                f"Buen dia, {alias}. Que gusto atenderlos nuevamente. "
                 "Por favor envianos el pedido con los productos y cantidades "
                 "que necesitan. Por ejemplo: 2 tortas de chocolate, 18 brownies "
                 "y 12 galletas NY Oreo."
@@ -387,6 +394,18 @@ class AssistantService:
             intent=ConversationIntent.GREETING,
             stage=ConversationStage.PRODUCT_DISCOVERY,
             suggested_actions=["Recibir pedido de precio fijo"],
+        )
+
+    @staticmethod
+    def _customer_thanks_reply() -> AssistantReply:
+        return AssistantReply(
+            message=(
+                "Gracias a ti por elegir a Rosa Pistacho. Nos alegra poder "
+                "acompanarte y ayudarte con tu pedido."
+            ),
+            intent=ConversationIntent.FAQ,
+            stage=ConversationStage.FAQ_RESPONSE,
+            suggested_actions=["Cerrar conversacion amable"],
         )
 
     @staticmethod
