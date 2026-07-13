@@ -81,7 +81,7 @@ Atlas can currently handle:
 
 - Greeting with menu options.
 - Catalog questions with a PDF link instead of a long chat message.
-- Quote requests with number of people, colors and reference image guidance.
+- Quote requests with number of people and reference image guidance.
 - Initial order intent with name, delivery date, product type, number of people,
   delivery method and cake reference image.
 - Delivery or pickup questions. Pickup replies include the Rosa Pistacho address

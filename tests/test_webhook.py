@@ -200,7 +200,8 @@ def test_frequent_cafe_customer_gets_fixed_price_quote() -> None:
     assert "Brownie" in body["reply"]
     assert "Galleta NY Oreo" in body["reply"]
     assert "$306.000 COP" in body["reply"]
-    assert "credito" in body["reply"]
+    assert "credito" not in body["reply"]
+    assert "condiciones acordadas con Rosa Pistacho" in body["reply"]
     assert "soporte de pago" not in body["reply"]
     assert "duena" not in body["reply"]
 
@@ -238,6 +239,22 @@ def test_frequent_cafe_customer_does_not_get_custom_cake_quote_flow() -> None:
     assert "imagenes obscenas" not in body["reply"]
 
 
+def test_frequent_cafe_customer_gets_warm_thanks_reply() -> None:
+    response = client.post(
+        "/webhook",
+        json={
+            "from_phone": "573009990001",
+            "message": "Gracias",
+        },
+    )
+
+    assert response.status_code == 200
+    body = response.json()
+    assert body["customer_id"] == "CL0001"
+    assert "Gracias a ustedes" in body["reply"]
+    assert "sigan eligiendo a Rosa Pistacho" in body["reply"]
+
+
 def test_new_cafe_application_option_routes_to_human_review() -> None:
     response = client.post(
         "/webhook",
@@ -270,26 +287,20 @@ def test_custom_quote_conversation_memory_flow() -> None:
         json={"from_phone": phone, "message": "20 personas"},
     )
     assert second.status_code == 200
-    assert "color o colores" in second.json()["reply"]
+    assert "imagen de referencia" in second.json()["reply"]
+    assert "color o colores" not in second.json()["reply"]
 
     third = client.post(
         "/webhook",
-        json={"from_phone": phone, "message": "Rosada y dorada"},
-    )
-    assert third.status_code == 200
-    assert "imagen de referencia" in third.json()["reply"]
-    assert "obscenas" in third.json()["reply"]
-
-    fourth = client.post(
-        "/webhook",
         json={"from_phone": phone, "message": "Si, ya la envie"},
     )
-    assert fourth.status_code == 200
-    body = fourth.json()
+    assert third.status_code == 200
+    body = third.json()
     assert body["stage"] == "human_review"
     assert "20 personas" in body["reply"]
-    assert "Rosada y dorada" in body["reply"]
-    assert "asesora" in body["reply"]
+    assert "Si, ya la envie" in body["reply"]
+    assert "pastelera" in body["reply"]
+    assert "asesora" not in body["reply"]
 
 
 def test_order_conversation_memory_flow() -> None:

@@ -14,7 +14,7 @@ from app.config.business_rules import (
     ROSA_PISTACHO_ADDRESS,
     ROSA_PISTACHO_HOURS,
 )
-from app.models.customer import Customer, CustomerType
+from app.models.customer import Customer, CustomerLevel, CustomerType
 
 
 class AssistantService:
@@ -24,6 +24,12 @@ class AssistantService:
 
         if not normalized_message:
             return AssistantService._main_menu_reply(customer)
+
+        if AssistantService._is_thanks(normalized_message) and (
+            customer.customer_type == CustomerType.CAFE
+            or customer.customer_level in {CustomerLevel.FREQUENT, CustomerLevel.VIP}
+        ):
+            return AssistantService._frequent_customer_thanks_reply(customer)
 
         if customer.customer_type == CustomerType.CAFE:
             cafe_reply = AssistantService._generate_cafe_reply(customer, normalized_message)
@@ -183,12 +189,17 @@ class AssistantService:
     ) -> AssistantReply:
         if session.step == "people":
             session.data["people"] = message.strip()
-            session.step = "colors"
+            session.step = "reference_image"
             return AssistantReply(
-                message="Gracias. ¿Que color o colores te gustaria que tuviera?",
+                message=(
+                    "Perfecto. ¿Tienes una imagen de referencia? Si la tienes, "
+                    "por favor enviala en este chat.\n\n"
+                    "Ten presente que en Rosa Pistacho no trabajamos con imagenes "
+                    "obscenas o contenido inapropiado."
+                ),
                 intent=ConversationIntent.QUOTE,
                 stage=ConversationStage.QUOTE_DETAILS,
-                suggested_actions=["Pedir colores"],
+                suggested_actions=["Pedir imagen de referencia"],
             )
 
         if session.step == "colors":
@@ -214,7 +225,7 @@ class AssistantService:
                 message=(
                     "Gracias. Ya tenemos la informacion inicial para cotizar tu "
                     f"torta personalizada:\n\n{summary}\n\n"
-                    "Una asesora de Rosa Pistacho revisara los detalles y te "
+                    "La pastelera de Rosa Pistacho revisara los detalles y te "
                     "compartira la cotizacion."
                 ),
                 intent=ConversationIntent.QUOTE,
@@ -298,7 +309,6 @@ class AssistantService:
         return "\n".join(
             [
                 f"- Personas: {session.data.get('people', 'pendiente')}",
-                f"- Colores: {session.data.get('colors', 'pendiente')}",
                 f"- Imagen de referencia: {session.data.get('reference_image', 'pendiente')}",
             ]
         )
@@ -337,9 +347,8 @@ class AssistantService:
         ]
         summary = "\n".join(lines)
         payment_message = (
-            "Este cliente cuenta con credito en Rosa Pistacho. "
             "Registraremos el pedido para preparacion segun las condiciones "
-            "acordadas con el negocio."
+            "acordadas con Rosa Pistacho."
             if customer.has_credit
             else (
                 "Una vez recibamos el soporte de pago, Rosa Pistacho validara "
@@ -378,6 +387,20 @@ class AssistantService:
             intent=ConversationIntent.GREETING,
             stage=ConversationStage.PRODUCT_DISCOVERY,
             suggested_actions=["Recibir pedido de precio fijo"],
+        )
+
+    @staticmethod
+    def _frequent_customer_thanks_reply(customer: Customer) -> AssistantReply:
+        alias = customer.alias or customer.name
+        return AssistantReply(
+            message=(
+                f"Gracias a ustedes, {alias}. Nos alegra mucho que sigan "
+                "eligiendo a Rosa Pistacho. Dejamos la informacion registrada "
+                "para continuar con el proceso."
+            ),
+            intent=ConversationIntent.FAQ,
+            stage=ConversationStage.FAQ_RESPONSE,
+            suggested_actions=["Cerrar conversacion amable"],
         )
 
     @staticmethod
@@ -441,6 +464,11 @@ class AssistantService:
     @staticmethod
     def _is_greeting(message: str) -> bool:
         keywords = {"hola", "buenas", "buenos dias", "buenas tardes", "buenas noches"}
+        return any(keyword in message for keyword in keywords)
+
+    @staticmethod
+    def _is_thanks(message: str) -> bool:
+        keywords = {"gracias", "muchas gracias", "mil gracias", "listo gracias"}
         return any(keyword in message for keyword in keywords)
 
     @staticmethod
